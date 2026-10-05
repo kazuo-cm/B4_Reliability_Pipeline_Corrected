@@ -35,6 +35,12 @@ for j = 1:numel(names)
         'Desvio padrao fisico nulo ou negativo: %s.', names(j));
 end
 if isfield(options,'Pf_population')
+    assert(isfield(options,'Pf_population_names'), 'B5:Population', ...
+        'Populacao reutilizada requer Pf_population_names na ordem das colunas.');
+    populationNames = B5_Utils_CORRECTED.ValidateNames( ...
+        options.Pf_population_names, 'Pf_population_names');
+    assert(isequal(populationNames,names), 'B5:Population', ...
+        'Colunas da populacao Pf diferentes da ordem treinada.');
     X = options.Pf_population;
     assert(size(X,1) == options.n_mcs, 'B5:Population', ...
         'Pf_population deve ter exatamente n_mcs linhas; nao sera reamostrada.');
@@ -68,6 +74,7 @@ else
     R.MCS.Status = 'estimated';
 end
 R.Pf_population = X;
+R.Pf_population_names = names;
 R.seed = options.seed;
 R.population_scope = 'fixed_physical_population_no_convergence_claim';
 R.FORM.Status = 'not_requested';
@@ -80,11 +87,23 @@ if options.run_form
     Aopts.Method = 'FORM';
     Aopts.Input = physicalInput;
     Aopts.Model = gModel;
+    Aopts.LimitState.Threshold = 0;
+    Aopts.LimitState.CompOp = '<=';
     analysis = uq_createAnalysis(Aopts,'-private');
+    assert(isfield(analysis.Results,'History') && ...
+        numel(analysis.Results.History) == 1 && ...
+        isfield(analysis.Results.History,'ExitFlag'), 'B5:FORMConvergence', ...
+        'UQLab nao forneceu diagnostico de convergencia FORM.');
+    exitFlag = string(analysis.Results.History.ExitFlag);
+    assert(isscalar(exitFlag) && ~ismissing(exitFlag) && ...
+        (strcmp(exitFlag,'g_X = 0') || ...
+        startsWith(exitFlag,'|Uk-Uk+1| < StopEpsilon _AND_')), ...
+        'B5:FORMConvergence', 'FORM nao convergiu: %s.', strjoin(exitFlag,', '));
     formPf = analysis.Results.Pf;
     validateattributes(formPf, {'numeric'}, {'real','scalar','finite','>=',0,'<=',1});
     R.FORM.Pf = double(formPf);
     R.FORM.Status = 'estimated';
+    R.FORM.ExitFlag = exitFlag;
     R.FORM.Results = analysis.Results;
 end
 end

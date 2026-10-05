@@ -63,7 +63,8 @@ Não foram adicionadas dependências ao repositório.
    Cada variável selecionada deve aparecer em exatamente uma tabela.
 9. **População Pf fixa.** MCS gera uma única matriz física com `n_mcs` linhas
    e a preserva em `R.Pf_population`. Ela pode ser reutilizada por
-   `options.Pf_population`, com dimensão idêntica. Não há reamostragem por lote,
+   `options.Pf_population`, com dimensão idêntica e nomes de colunas explícitos
+   em `options.Pf_population_names`, na ordem treinada. Não há reamostragem por lote,
    parada após certo número de falhas ou alegação de convergência Stage 3.
    O usuário deve manter a mesma distribuição física ao reutilizá-la.
 10. **Overflow/underflow em RVs.** Não existem perturbações locais no B5.
@@ -85,6 +86,13 @@ O treinamento, a seleção e as estatísticas não foram alterados.
 Arquivos MAT antigos com esse contrato incompleto serão rejeitados: regenere
 o artefato com o exportador corrigido. Não inferir silenciosamente o espaço
 do modelo nem remover as verificações para aceitar um MAT antigo.
+
+O cálculo CV já existente no B4 não foi reimplementado nesta mudança. A
+disponibilidade de `CV_Rsquared` depende do artefato/implementação de treinamento;
+não presumir que `Meta.CV` produza esse campo em toda versão do UQLab. Se o
+treinamento não gerar métricas CV finitas, ele precisa de validação k-fold
+efetiva antes de exportar o modelo; o B5 não fabrica métricas nem transforma
+automaticamente LOO em R² de k-fold.
 
 `valid_for_global_pf_sampling = false` permanece inalterado. O input UQLab
 salvo no Stage 3 é uma aproximação Gaussiana **normalizada**, não a distribuição
@@ -138,7 +146,11 @@ antes da chamada quando quiser validar apenas um subconjunto.
 juntos. A execução oficial verifica os dados LHS antes da análise de Pf.
 O estado limite é `g = limit_m - displacement`, com falha em `g <= 0`.
 FORM e MCS usam a mesma função de previsão física. Erros UQLab são propagados.
-FORM pode ser desativado com `run_form = false`.
+FORM exige diagnóstico `Results.History.ExitFlag` compatível com UQLab 2.1:
+parada pelos dois critérios de tolerância ou `g_X = 0`. Limite de iterações,
+gradiente nulo sem convergência e diagnósticos ausentes/desconhecidos são
+rejeitados, mesmo quando UQLab retornar um Pf finito. Isso não prova que o ponto
+encontrado é o mínimo global. FORM pode ser desativado com `run_form = false`.
 
 MCS retorna `Pf`, `N`, `NFailures`, `StandardError` e `CoV`. Se não houver
 falhas, `CoV = Inf`, o status explicita a limitação e
@@ -151,6 +163,7 @@ Para reutilizar a população sem alterar o estado global do gerador aleatório:
 ```matlab
 opts = cfg.reliability_options;
 opts.Pf_population = R.reliability.Pf_population;
+opts.Pf_population_names = R.reliability.Pf_population_names;
 Rfixed = B5_Run_Reliability_Analysis_CORRECTED(C,physicalInputOptions,opts);
 assert(isequal(Rfixed.Pf_population,R.reliability.Pf_population));
 ```
