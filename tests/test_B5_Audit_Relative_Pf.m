@@ -37,6 +37,16 @@ verifyTrue(testCase, contains(a.Interpretation(8), "Truncation changes"));
 verifyTrue(testCase, startsWith(a.ComparisonScope(8), "diagnostic:truncated"));
 end
 
+function testIntegerPfUsesFloatingPointArithmetic(testCase)
+[report, rows] = local_fixture;
+report.Pf = uint8(ones(9, 1));
+report.Pf(5) = 0;
+out = local_run(testCase, report, rows, 'ReferencePf', uint8(1));
+verifyEqual(testCase, out.relativeErrorAudit.AbsoluteDifference(5), 1);
+verifyEqual(testCase, out.report.ErroRelativoPf_pct(5), 100);
+verifyEqual(testCase, out.report.Pf, report.Pf);
+end
+
 function testZeroReference(testCase)
 [report, rows] = local_fixture;
 report.Pf(2) = 0;
