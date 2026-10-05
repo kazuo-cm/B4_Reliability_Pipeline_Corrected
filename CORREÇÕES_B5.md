@@ -201,6 +201,15 @@ catch
 end
 assert(rejected);
 
+% O tamanho explicito de lote deve ser respeitado e validado.
+rejected = false;
+try
+    B5_Predict_PCK_CORRECTED([],zeros(0,2),N.muX,N.sdX,N.muY,N.sdY,0);
+catch
+    rejected = true;
+end
+assert(rejected);
+
 [r,keep] = B5_Utils_CORRECTED.SafeCorrelation([ones(3,1),(1:3)'],(1:3)');
 assert(isequal(keep,[false true]) && abs(r-1) < 1e-12);
 assert(abs(B5_Utils_CORRECTED.PerturbPositiveRV(2,log(3))-6) < 1e-12);

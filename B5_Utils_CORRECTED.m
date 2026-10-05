@@ -52,7 +52,7 @@ classdef B5_Utils_CORRECTED
         end
 
         function y = B5_Predict_PCK(modelPCK, X, muX, sdX, muY, sdY, batchSize)
-            if nargin < 8
+            if nargin < 7
                 batchSize = 10000;
             end
             validateattributes(batchSize, {'numeric'}, ...
