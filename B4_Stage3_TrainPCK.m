@@ -429,7 +429,9 @@ Stage3Contract.output_mu = muY_original;
 Stage3Contract.output_sigma = sdY_original;
 
 Stage3Contract.input_representation = 'physical';
-Stage3Contract.external_input_transform = 'none';
+Stage3Contract.model_input_representation = 'standardized';
+Stage3Contract.external_input_transform = '(X - muX) ./ sdX';
+Stage3Contract.cv_scope = 'conditional_on_selected_variables';
 Stage3Contract.probabilistic_mode = ...
     'Gaussian_moments_estimated_training_approximation_NORMALIZED';
 Stage3Contract.valid_for_global_pf_sampling = false;
