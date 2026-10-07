@@ -188,6 +188,8 @@ cfg.AL_USE_Pf_STABILITY = true;
 % Parametros da populacao LHS FIXA para estimacao de Pf no Stage 3
 % (nao muda entre iteracoes; usado como referencia para convergencia)
 cfg.AL_Pf_population_size = 5000;  % amostras LHS
+cfg.AL_Pf_mcs_target_population = 5000;    % populacao para MCS
+cfg.AL_Pf_mcs_min_failures = 50;           % minimo de falhas para MCS
 cfg.AL_Pf_k_factor = 2.0;          % sigma-factor para faixa (k=2 ≈ 95% CI)
 
 %% =========================================================================
@@ -240,8 +242,7 @@ cfg.AL_RETRAIN_EACH_ITER = true;            % true: retreinar model a cada itera
 %     AL_Pf_mcs_target_population = 50000
 %     AL_Pf_mcs_min_failures = 100
 
-cfg.AL_Pf_mcs_target_population = 50000;    % populacao maxima para MCS
-cfg.AL_Pf_mcs_min_failures = 50;            % parar quando N+ falhas encontradas
+% (ja definido em § 10)
 
 % === SS: Subset Simulation (fallback automatico para falhas raras) ===
 %
