@@ -75,6 +75,18 @@ cfg.simulation_results_file = ...
 
 cfg.rs2_expected_stage = 7;
 
+% Contrato do batch Python: ajustar flags para o run_al_batch.py instalado.
+% Cada item e um argumento separado (nao uma linha de shell).
+% Saida: CSV com SampleID ou SimulationID e a coluna de deslocamento abaixo.
+% Status (OK/SUCCESS/COMPLETED) e Stage sao validados quando presentes.
+cfg.stage4_result_displacement_column = 'Displacement_m';
+cfg.stage4_python_args = {'--xi-file','{xi_file}', ...
+    '--material-rv-file','{material_rv_file}', ...
+    '--liner-rv-file','{liner_rv_file}', ...
+    '--field-file','{field_file}', '--results-file','{results_file}', ...
+    '--model-file','{model_file}', '--sim-id','{sim_id}', ...
+    '--expected-stage','{expected_stage}'};
+
 %% =========================================================================
 % 5. SAIDAS PADRAO - STAGES 0-4
 %% =========================================================================
@@ -173,7 +185,7 @@ cfg.stage3_overfit_r2_gap = 0.15;
 %   - Stage 3 gera populacao LHS FIXA (gaussiana) com AL_Pf_population_size amostras
 %   - Estima Pf_initial, Pf_low, Pf_high, largura relativa
 %   - Armazena em Pf_population para Stage 4 usar como referencia
-%   - Stage 4 estima Pf a cada iteracao e para quando 5 leituras tiverem variacao < 5%
+%   - Stage 4 estima Pf apos retreinar e para quando 5 leituras tiverem variacao < 5%
 %
 % Se FALSE:
 %   - Stage 3 nao gera populacao Pf
@@ -220,17 +232,17 @@ cfg.AL_APPEND_TO_TRAINING = false;          % MANTER false (seguranca)
 cfg.AL_RETRAIN_EACH_ITER = true;            % true: retreinar model a cada iteracao
 
 %% =========================================================================
-% 12. PARADA POR ESTABILIDADE DE Pf COM MCS/SS HIBRIDO
+% 12. PARADA POR ESTABILIDADE DE Pf COM POPULACAO MCS FIXA
 %% =========================================================================
 
 % AL_USE_Pf_STABILITY ja ativado em § 10
 % Aqui definimos os parametros de parada e metodos numericos
 
-% === MCS: Monte Carlo Sampling (parada automatica por numero de falhas) ===
+% === MCS: populacao fixa; numero de falhas valida a convergencia ===
 %
 % Mecanismo: Avalia metamodelo em AL_Pf_mcs_target_population amostras
-%            Para automaticamente quando encontra AL_Pf_mcs_min_failures falhas
-%            Mais rapido, menos acurado para falhas raras
+%            Avalia toda a populacao, sem parada antecipada enviesada.
+%            Exige AL_Pf_mcs_min_failures para permitir convergencia.
 %
 % AJUSTE MANUAL:
 %   Convergencia rapida (AL com poucas iteracoes):
@@ -241,14 +253,12 @@ cfg.AL_RETRAIN_EACH_ITER = true;            % true: retreinar model a cada itera
 %     AL_Pf_mcs_min_failures = 100
 
 cfg.AL_Pf_mcs_target_population = 50000;    % populacao maxima para MCS
-cfg.AL_Pf_mcs_min_failures = 50;            % parar quando N+ falhas encontradas
+cfg.AL_Pf_mcs_min_failures = 50;            % minimo de falhas para convergencia
 
-% === SS: Subset Simulation (fallback automatico para falhas raras) ===
+% === SS: parametros legados (nao usados por este Stage 4) ===
 %
-% Mecanismo: Fallback automatico se MCS nao encontra falhas suficientes
-%            Amostras de forma progressiva em subsets de probabilidade
-%            Mais lento, mais acurado para falhas raras (Pf < 0.1%)
-%            Ativado automaticamente se MCS tiver poucas falhas
+% Sem falhas suficientes, Stage 4 nao declara convergencia por Pf.
+% Nao ha fallback SS implementado; aumentar a populacao para eventos raros.
 %
 % AJUSTE MANUAL:
 %   Falhas raras (<0.1%):
