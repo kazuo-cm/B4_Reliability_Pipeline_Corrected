@@ -55,6 +55,9 @@ Stages 0–3 e recarrega o modelo e sua normalização. Confere se o treinamento
 consumiu todos os casos aceitos. CSVs originais não são alterados.
 Com `AL_RESET_ON_START=false`, os quatro CSVs acumulados são reutilizados
 quando completos; o histórico de estabilidade começa novamente nessa execução.
+Se houver observações acumuladas ainda não incorporadas ao modelo e todo
+treinamento estiver desativado, a retomada é interrompida sem sobrescrever os
+CSVs. Ative treinamento inicial ou `AL_RETRAIN_EACH_ITER` para incorporá-las.
 Pastas de tentativas anteriores não são sobrescritas.
 
 Pf usa uma população LHS física fixa, gerada por coluna sob demanda para evitar

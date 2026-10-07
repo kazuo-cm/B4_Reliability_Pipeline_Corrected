@@ -324,6 +324,7 @@ if ~cfg.AL_RESET_ON_START && any(exists)
     initial.material_rv_file = paths{2};
     initial.liner_rv_file = paths{3};
     initial.training_results_file = paths{4};
+    initial.stage4_resume_snapshot = true;
 end
 end
 
@@ -425,6 +426,14 @@ T.xi = readtable(cfg.training_xi_file, 'VariableNamingRule', 'preserve');
 T.material = readtable(cfg.material_rv_file, 'VariableNamingRule', 'preserve');
 T.liner = readtable(cfg.liner_rv_file, 'VariableNamingRule', 'preserve');
 T.results = readtable(cfg.training_results_file, 'VariableNamingRule', 'preserve');
+if isfield(cfg, 'stage4_resume_snapshot') && cfg.stage4_resume_snapshot
+    snapshotIDs = double(T.xi.(local_id_column(T.xi)));
+    assert(numel(snapshotIDs) == numel(M.sampleID) && ...
+        all(ismember(snapshotIDs, M.sampleID)), 'B4:UntrainedSnapshot', ...
+        ['Snapshot contem observacoes nao incorporadas ao modelo. ', ...
+         'Ative treinamento inicial ou AL_RETRAIN_EACH_ITER antes de retomar; ', ...
+         'os CSVs acumulados nao foram alterados.']);
+end
 fields = {'xi','material','liner','results'};
 for j = 1:numel(fields)
     name = fields{j};
