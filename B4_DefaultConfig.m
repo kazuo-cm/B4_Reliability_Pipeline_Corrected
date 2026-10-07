@@ -10,7 +10,8 @@ function cfg = B4_DefaultConfig()
 %
 % A diferenca principal desta versao e que a pasta base e descoberta
 % automaticamente apartir do diretorio padrao do projeto.
-% VERSÃO CORRIGIDA: Inclui novos parâmetros de validação e normalização
+% VERSÃO CORRIGIDA v6: Validação, normalização, configuração de Pf e
+% tolerância a materiais espacialmente ausentes.
 % =========================================================================
 
 cfg = struct();
@@ -172,6 +173,10 @@ cfg.min_stable_before_stop = 8;     % Iterações mínimas antes de parar por co
 cfg.field_smoothness_tol_delta_c = 0.5;    % Máximo Δ/C entre materiais (50%)
 cfg.field_smoothness_tol_delta_phi = 0.5;  % Máximo Δ/φ entre materiais (50%)
 
+% Permite materiais reduzidos/eliminados; exige ao menos um material válido.
+% Use false para preservar a rejeição de qualquer material vazio/ausente.
+cfg.spatial_allow_missing_materials = true;
+
 %% -------------------------------------------------------------------------
 % NOVO: Configuração de validação cruzada em PCE (CORREÇÃO #8)
 %% -------------------------------------------------------------------------
@@ -180,5 +185,25 @@ cfg.field_smoothness_tol_delta_phi = 0.5;  % Máximo Δ/φ entre materiais (50%)
 % Mas pode ser forçado aqui se desejado:
 cfg.cv_fold_count_min = 5;
 cfg.cv_fold_count_max = 10;
+
+%% -------------------------------------------------------------------------
+% ESTIMACAO DE Pf NO STAGE 3
+%% -------------------------------------------------------------------------
+
+% Habilita o bloco de população/referência de Pf nas versões do Stage 3
+% que o implementam, independentemente de AL_USE_CONVERGENCE (critério local).
+% O Stage 3 incluído neste repositório ainda não implementa esse bloco;
+% o Stage 4 também deve consumir a referência para comparar iterações.
+cfg.AL_USE_Pf_CONVERGENCE = true;
+
+% Tamanho da população LHS para estimar Pf inicial e acompanhar sua evolução.
+cfg.AL_Pf_population_size = 5000;
+
+% Multiplicador k-sigma da incerteza preditiva para os limites de Pf.
+% k=2 corresponde a uma faixa aproximada de 95% sob hipótese gaussiana.
+cfg.AL_Pf_k_factor = 2.0;
+
+% required_consecutive=5 e relative_tolerance=0.05 já definidos acima;
+% a parada por estabilidade de Pf depende da implementação do Stage 4.
 
 end
